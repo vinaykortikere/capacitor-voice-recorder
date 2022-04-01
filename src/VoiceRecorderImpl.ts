@@ -56,7 +56,7 @@ export class VoiceRecorderImpl {
     }
     try {
       this.mediaRecorder.stop();
-      this.mediaRecorder.stream.getTracks().forEach((t)=>t.stop());
+      this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
       return this.pendingResult;
     } catch (ignore) {
       throw failedToFetchRecordingError();
@@ -154,7 +154,12 @@ export class VoiceRecorderImpl {
   private static blobToBase64 (blob: Blob): Promise<Base64String> {
     return new Promise(resolve => {
       const reader = new FileReader();
-      reader.onloadend = () => resolve(String(reader.result));
+      reader.onloadend = () => {
+        const recordingResult = String(reader.result);
+        const splitResult = recordingResult.split('base64,');
+        const toResolve = (splitResult.length > 1) ? splitResult[1] : recordingResult;
+        resolve(toResolve.trim());
+      };
       reader.readAsDataURL(blob);
     });
   }
